@@ -6,18 +6,15 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
-# Python deps
+# Python deps — copy pyproject.toml and src together so -e install works
 COPY pyproject.toml .
+COPY src/ src/
 RUN pip install --no-cache-dir -e ".[dev]" && pip install psycopg2-binary
 
-# Source
-COPY src/ src/
+# Config & migrations
 COPY alembic/ alembic/
 COPY alembic.ini .
-COPY data/ data/
-
-# Install the package
-RUN pip install -e .
+COPY infra/ infra/
 
 EXPOSE 8000
 

@@ -158,6 +158,9 @@ class Settings(BaseSettings):
     # Dev: SQLite (auto-resolved). Prod: postgresql+asyncpg://user:pass@host:5432/db
     database_url: str = ""  # Set below if empty
 
+    # ── Redis ──
+    redis_url: str = "redis://localhost:6379/0"
+
     # ── Provider 选择 ──
     # 设为上面任意 preset key（deepseek/qwen/kimi/zhipu/doubao/minimax/...）
     # 留空则从下面的 model / base_url 手动配置
