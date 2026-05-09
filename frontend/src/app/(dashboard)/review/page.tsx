@@ -28,7 +28,7 @@ export default function ReviewPage() {
         {
           ticket_id: 'REV-A1B2C3D4',
           tenant_id: 'zhang-family',
-          from_user: 'zhang_wei',
+          from_user: 'hong_xiansheng',
           customer_query: '我应该现在卖掉北京的房产吗？现在的市场情况如何？',
           reason: 'major_financial',
           priority: 'urgent',
@@ -41,7 +41,7 @@ export default function ReviewPage() {
         {
           ticket_id: 'REV-E5F6G7H8',
           tenant_id: 'zhang-family',
-          from_user: 'zhang_wei',
+          from_user: 'hong_xiansheng',
           customer_query: '帮我看一下最近有没有税务方面的问题需要注意',
           reason: 'tax_advice',
           priority: 'standard',

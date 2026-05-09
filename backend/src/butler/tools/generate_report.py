@@ -90,7 +90,7 @@ def _asset_monthly_report(period: str) -> str:
 ## 下月关注
 - 5月31日：香港物业税申报截止
 - 6月1日：友邦保险年缴保费
-- 6月7日：张明SAT考试
+- 6月7日：洪明SAT考试
 """
 
 
@@ -119,7 +119,7 @@ def _tax_quarterly_report(period: str) -> str:
 def _health_annual_report(period: str) -> str:
     return f"""# 家庭健康年报 — {period}
 
-## 张伟 (48岁)
+## 洪伟 (48岁)
 - 最近体检: 2026-02-20, 上海和睦家
 - 总体评价: 良好
 - 关注项: LDL胆固醇 3.8mmol/L (偏高), 建议3个月后复查
@@ -130,26 +130,26 @@ def _health_annual_report(period: str) -> str:
 - 总体评价: 良好
 - 关注项: 甲状腺结节 (3类, 年度随访)
 
-## 张明 (16岁)
+## 洪明 (16岁)
 - 最近体检: 2025-09-01, Andover校医
 - 总体评价: 良好
 - 视力: 需年度检查
 
-## 张悦 (12岁)
+## 洪悦 (12岁)
 - 最近体检: 2026-03-10, 上海儿童医学中心
 - 总体评价: 良好
 - 疫苗接种: 按时完成
 
 ## 建议
 - 全家人建议每年至少一次全面体检
-- 张伟建议6月底前复查血脂
+- 洪伟建议6月底前复查血脂
 """
 
 
 def _education_progress_report(period: str) -> str:
     return f"""# 子女教育进展报告 — {period}
 
-## 张明 (16岁, Phillips Academy Andover, 11年级)
+## 洪明 (16岁, Phillips Academy Andover, 11年级)
 
 ### 学业
 - GPA: 3.8/4.0 (截至2026春季学期)
@@ -170,7 +170,7 @@ def _education_progress_report(period: str) -> str:
 - 07/15: RSI夏校结果
 - 08/01: Common App文书启动
 
-## 张悦 (12岁, Harrow International School Shanghai, 7年级)
+## 洪悦 (12岁, Harrow International School Shanghai, 7年级)
 
 ### 学业
 - 整体表现优秀，数学和音乐突出

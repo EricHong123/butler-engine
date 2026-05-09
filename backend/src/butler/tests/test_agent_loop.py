@@ -191,7 +191,7 @@ async def test_agent_runner_integration():
     """Full integration: AgentRunner with mock LLM."""
     mock_llm = MockLLMClient(responses=[
         [
-            {"type": "text_delta", "text": "您好，张先生。"},
+            {"type": "text_delta", "text": "您好，洪先生。"},
             {"type": "text_delta", "text": "我来帮您查看资产情况。"},
             {"type": "message_stop"},
         ]
@@ -203,7 +203,7 @@ async def test_agent_runner_integration():
     config = AgentRunnerConfig(
         tenant_id="zhang-family",
         tools=registry,
-        profile_markdown="# Zhang Family\n- Zhang Wei, 48, Founder",
+        profile_markdown="# Hong Family\n- Hong Wei, 48, Founder",
     )
 
     runner = AgentRunner(config, llm=mock_llm)
@@ -217,4 +217,4 @@ async def test_agent_runner_integration():
 
     assert runner.get_conversation_id() is not None
     assert len(runner.messages) >= 1  # User message added
-    assert "张先生" in result_text
+    assert "洪先生" in result_text

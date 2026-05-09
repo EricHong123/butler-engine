@@ -27,7 +27,7 @@ async def test_memory_save_and_load():
             name="Investment Preference",
             description="Principal prefers low-risk bonds over equities",
             memory_type=MemoryType.USER,
-            content="Zhang Wei explicitly stated he prefers fixed-income products with AAA rating or above.",
+            content="Hong Wei explicitly stated he prefers fixed-income products with AAA rating or above.",
         )
         await manager.save(entry)
 
@@ -73,16 +73,16 @@ async def test_tenant_store_profile():
 
         record = TenantRecord(
             tenant_id="zhang-family",
-            name="Zhang Family Office",
+            name="Hong Family Office",
             plan_tier="family",
-            profile_markdown="# Zhang Family\n- Zhang Wei, 48\n- Net worth: 500M RMB",
+            profile_markdown="# Hong Family\n- Hong Wei, 48\n- Net worth: 500M RMB",
         )
         await store.save(record)
 
         # Load back
         loaded = await store.get("zhang-family")
         assert loaded is not None
-        assert loaded.name == "Zhang Family Office"
+        assert loaded.name == "Hong Family Office"
         assert loaded.plan_tier == "family"
 
         # Save and load profile markdown

@@ -84,7 +84,7 @@ async def test_text_message_end_to_end(crypto, client):
     # Simulate a customer sending "你好" via WeChat
     plaintext_xml = """<xml>
 <ToUserName><![CDATA[agent_001]]></ToUserName>
-<FromUserName><![CDATA[zhang_wei]]></FromUserName>
+<FromUserName><![CDATA[hong_xiansheng]]></FromUserName>
 <CreateTime>1715721600</CreateTime>
 <MsgType><![CDATA[text]]></MsgType>
 <Content><![CDATA[你好]]></Content>
@@ -226,7 +226,7 @@ async def test_voice_message_returns_processing(crypto, client):
     """Voice without ASR should return 'processing' response."""
     plaintext_xml = """<xml>
 <ToUserName><![CDATA[agent_001]]></ToUserName>
-<FromUserName><![CDATA[zhang_wei]]></FromUserName>
+<FromUserName><![CDATA[hong_xiansheng]]></FromUserName>
 <CreateTime>1715721600</CreateTime>
 <MsgType><![CDATA[voice]]></MsgType>
 <MediaId><![CDATA[media_voice_001]]></MediaId>

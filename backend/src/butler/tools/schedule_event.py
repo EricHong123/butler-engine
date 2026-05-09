@@ -113,11 +113,11 @@ def _get_mock_events() -> list[dict[str, Any]]:
             "location": "视频会议",
         },
         {
-            "title": "张明 SAT 考试",
+            "title": "洪明 SAT 考试",
             "datetime": "2026-06-07T08:00",
             "duration_minutes": 240,
             "priority": "high",
-            "participants": "张明",
+            "participants": "洪明",
             "location": "上海美国学校",
         },
         {
@@ -137,11 +137,11 @@ def _get_mock_events() -> list[dict[str, Any]]:
             "location": "",
         },
         {
-            "title": "张悦钢琴比赛",
+            "title": "洪悦钢琴比赛",
             "datetime": "2026-05-20T10:00",
             "duration_minutes": 120,
             "priority": "normal",
-            "participants": "张悦",
+            "participants": "洪悦",
             "location": "上海音乐学院",
         },
     ]

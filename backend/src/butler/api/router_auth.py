@@ -29,7 +29,7 @@ DEV_ACCOUNTS: dict[str, dict] = {
     hashlib.sha256("888888".encode()).hexdigest(): {
         "tenant_id": "demo-001",
         "customer_id": "cust-001",
-        "display_name": "Zhang Wei",
+        "display_name": "洪先生",
         "plan_tier": "family",
     },
     # PIN: 123456 → reviewer/admin

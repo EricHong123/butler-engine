@@ -119,7 +119,7 @@ class TestReviewQueue:
 class TestEncryption:
     def test_encrypt_decrypt_field(self):
         enc = TenantEncryption("ab" * 32)  # Deterministic test key
-        plaintext = "张伟"
+        plaintext = "洪伟"
 
         encrypted = enc.encrypt_field("tenant-001", plaintext)
         assert encrypted != plaintext
@@ -152,8 +152,8 @@ class TestEncryption:
     def test_encrypt_dict(self):
         enc = TenantEncryption("ab" * 32)
         data = {
-            "name": "张伟",
-            "wechat_id": "zhang_wei_001",
+            "name": "洪伟",
+            "wechat_id": "hong_xiansheng_001",
             "phone": "13800138000",
             "email": "zhang@example.com",
             "preference": "morning reports",
@@ -164,18 +164,18 @@ class TestEncryption:
         )
 
         # Sensitive fields should be encrypted
-        assert encrypted["name"] != "张伟"
+        assert encrypted["name"] != "洪伟"
         assert encrypted["phone"] != "13800138000"
         assert encrypted["email"] != "zhang@example.com"
         # Non-sensitive fields should be untouched
-        assert encrypted["wechat_id"] == "zhang_wei_001"
+        assert encrypted["wechat_id"] == "hong_xiansheng_001"
         assert encrypted["preference"] == "morning reports"
 
         # Decrypt back
         decrypted = enc.decrypt_dict(
             "t", encrypted, sensitive_keys={"name", "phone", "email"}
         )
-        assert decrypted["name"] == "张伟"
+        assert decrypted["name"] == "洪伟"
         assert decrypted["phone"] == "13800138000"
         assert decrypted["email"] == "zhang@example.com"
 

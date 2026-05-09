@@ -98,7 +98,7 @@ async def get_dashboard(tenant_id: str = "demo-001"):
         "urgent_alerts": [
             {"type": "tax", "msg": "香港物业税申报 — 5月31日截止", "priority": "urgent"},
             {"type": "insurance", "msg": "友邦年缴保费 — 6月1日到期", "priority": "high"},
-            {"type": "exam", "msg": "张明SAT考试 — 6月7日", "priority": "normal"},
+            {"type": "exam", "msg": "洪明SAT考试 — 6月7日", "priority": "normal"},
         ],
     }
 

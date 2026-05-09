@@ -107,14 +107,14 @@ def _get_mock_portfolio() -> list[dict[str, Any]]:
             "notes": "国际支出 + 子女留学费用",
         },
         {
-            "account_name": "家族信托 #1 — 张氏教育信托",
+            "account_name": "家族信托 #1 — 洪氏教育信托",
             "asset_type": "trust",
             "institution": "China International Trust",
             "currency": "CNY",
             "value_snapshot": 30_000_000.00,
             "value_date": "2026-03-31",
             "account_number_masked": "****7762",
-            "notes": "子女教育专项，受益人：张明、张悦",
+            "notes": "子女教育专项，受益人：洪明、洪悦",
         },
         {
             "account_name": "家族信托 #2 — 世代传承信托",

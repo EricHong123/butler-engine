@@ -159,7 +159,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu size={20} />
           </button>
           <div className="flex-1" />
-          <div className="text-sm text-muted">张氏家族 · 旗舰版</div>
+          <div className="text-sm text-muted">洪氏家族 · 旗舰版</div>
         </div>
 
         <div className="p-6">{children}</div>

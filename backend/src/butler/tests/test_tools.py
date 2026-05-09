@@ -193,7 +193,7 @@ class TestGenerateReport:
             "report_type": "health_annual",
             "period": "2026",
         }, MockContext())
-        assert "张伟" in result.data["report_markdown"]
+        assert "洪伟" in result.data["report_markdown"]
         assert "胆固醇" in result.data["report_markdown"]
 
     @pytest.mark.asyncio
@@ -203,7 +203,7 @@ class TestGenerateReport:
             "report_type": "education_progress",
             "period": "2026-05",
         }, MockContext())
-        assert "张明" in result.data["report_markdown"]
+        assert "洪明" in result.data["report_markdown"]
         assert "SAT" in result.data["report_markdown"]
 
     @pytest.mark.asyncio

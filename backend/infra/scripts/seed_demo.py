@@ -27,7 +27,7 @@ async def seed():
         # ── Tenant ──
         tenant = Tenant(
             id="demo-001",
-            name="Zhang Family Office",
+            name="Hong Family Office",
             plan_tier="family",
             is_active=True,
             profile_path="data/demo-001/profile/CLAUDE.md",
@@ -39,8 +39,8 @@ async def seed():
         customer = Customer(
             id="cust-001",
             tenant_id="demo-001",
-            display_name="Zhang Wei",
-            wechat_id="zhang_wei",
+            display_name="Hong Wei",
+            wechat_id="hong_xiansheng",
             phone="138****8000",
             email="zhangwei@example.com",
         )
@@ -60,10 +60,10 @@ async def seed():
                   asset_type="bank_deposit", currency="USD", value_snapshot=1_200_000,
                   value_date=date(2026, 5, 1), institution="HSBC Hong Kong",
                   account_number_masked="****3321", notes="国际支出 + 子女留学费用"),
-            Asset(tenant_id="demo-001", account_name="家族信托 #1 — 张氏教育信托",
+            Asset(tenant_id="demo-001", account_name="家族信托 #1 — 洪氏教育信托",
                   asset_type="trust", currency="CNY", value_snapshot=30_000_000,
                   value_date=date(2026, 3, 31), institution="China International Trust",
-                  account_number_masked="****7762", notes="子女教育专项，受益人：张明、张悦"),
+                  account_number_masked="****7762", notes="子女教育专项，受益人：洪明、洪悦"),
             Asset(tenant_id="demo-001", account_name="家族信托 #2 — 世代传承信托",
                   asset_type="trust", currency="CNY", value_snapshot=50_000_000,
                   value_date=date(2026, 3, 31), institution="CITIC Trust",
@@ -124,7 +124,7 @@ async def seed():
                      tags="HSBC, HK, 外币, Q1, 2026"),
             Document(tenant_id="demo-001", filename="Family_Trust_1_Education_Deed.pdf",
                      doc_type="contract", encrypted_path="data/demo-001/documents/trust_deed.pdf",
-                     tags="信托, 教育, 张明, 张悦"),
+                     tags="信托, 教育, 洪明, 洪悦"),
             Document(tenant_id="demo-001", filename="AIA_Life_Insurance_Policy.pdf",
                      doc_type="insurance", encrypted_path="data/demo-001/documents/aia_policy.pdf",
                      tags="保险, 寿险, 友邦, 美元", is_sensitive=True),
@@ -133,10 +133,10 @@ async def seed():
                      tags="房产税, 上海, 2025", expiry_date=date(2026, 12, 31)),
             Document(tenant_id="demo-001", filename="Annual_Health_Checkup_ZhangWei_2026.pdf",
                      doc_type="health", encrypted_path="data/demo-001/documents/health.pdf",
-                     tags="体检, 张伟, 2026", is_sensitive=True),
+                     tags="体检, 洪伟, 2026", is_sensitive=True),
             Document(tenant_id="demo-001", filename="Zhang_Ming_Andover_Acceptance.pdf",
                      doc_type="education", encrypted_path="data/demo-001/documents/andover.pdf",
-                     tags="教育, 张明, 录取, 美高"),
+                     tags="教育, 洪明, 录取, 美高"),
         ]
         for d in docs:
             session.add(d)
@@ -155,16 +155,16 @@ async def seed():
     await close_db()
 
 
-PROFILE_MARKDOWN = """# Customer Profile: Zhang Family
+PROFILE_MARKDOWN = """# Customer Profile: Hong Family
 
 ## Household Members
-- **Zhang Wei** (principal, age 48): Founder of WeiTech Holdings. Net worth ~500M RMB.
+- **Hong Wei** (principal, age 48): Founder of WeiTech Holdings. Net worth ~500M RMB.
   Communication style: Direct, values efficiency. Prefers morning check-ins.
-  WeChat ID: zhang_wei
+  WeChat ID: hong_xiansheng
 - **Zhang Li** (spouse, age 45): Manages household finances. Oversees children's education.
-- **Zhang Ming** (son, age 16): Boarding at Phillips Academy Andover. College prep year.
+- **Hong Ming** (son, age 16): Boarding at Phillips Academy Andover. College prep year.
   SAT scheduled June 7, 2026. Target score 1550+.
-- **Zhang Yue** (daughter, age 12): Harrow International School Shanghai. Piano and tennis.
+- **Hong Yue** (daughter, age 12): Harrow International School Shanghai. Piano and tennis.
   Piano ABRSM Grade 7 passed. Competition May 20.
 
 ## Financial Setup
@@ -172,7 +172,7 @@ PROFILE_MARKDOWN = """# Customer Profile: Zhang Family
 - Secondary: HSBC Premier (Hong Kong) for international, account ****3321
 - Investment accounts: CMB Wealth Management (稳健型组合, ****4452)
 - Trusts: 2 family trusts managed by CITIC Trust and China International Trust
-  - Trust #1: Education trust for Zhang Ming and Zhang Yue (¥30M)
+  - Trust #1: Education trust for Hong Ming and Hong Yue (¥30M)
   - Trust #2: Generational wealth preservation (¥50M)
 - Insurance: AIA Hong Kong Universal Life (USD 5M coverage, annual premium $50,000)
 - Properties: Tomson Riviera (primary, ¥45M), Beijing Chaoyang (rental, ¥12M, ~¥60万/yr)
@@ -193,7 +193,7 @@ PROFILE_MARKDOWN = """# Customer Profile: Zhang Family
 ## Key Dates
 - May 31: HK property tax deadline + CRS reporting
 - June 1: AIA annual premium due
-- June 7: Zhang Ming SAT exam
+- June 7: Hong Ming SAT exam
 - June 30: China personal income tax reconciliation
 - August 15: HK profits tax filing
 - October 15: US FBAR filing

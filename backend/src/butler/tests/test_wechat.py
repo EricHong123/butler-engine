@@ -86,7 +86,7 @@ class TestMessageParsing:
     def test_parse_text_message(self):
         xml = """<xml>
 <ToUserName><![CDATA[agent_001]]></ToUserName>
-<FromUserName><![CDATA[zhang_wei]]></FromUserName>
+<FromUserName><![CDATA[hong_xiansheng]]></FromUserName>
 <CreateTime>1715721600</CreateTime>
 <MsgType><![CDATA[text]]></MsgType>
 <Content><![CDATA[查一下我的资产情况]]></Content>
@@ -95,14 +95,14 @@ class TestMessageParsing:
 
         msg = parse_message(xml)
         assert msg.msg_type == "text"
-        assert msg.from_user == "zhang_wei"
+        assert msg.from_user == "hong_xiansheng"
         assert msg.to_user == "agent_001"
         assert msg.content == "查一下我的资产情况"
 
     def test_parse_voice_message(self):
         xml = """<xml>
 <ToUserName><![CDATA[agent_001]]></ToUserName>
-<FromUserName><![CDATA[zhang_wei]]></FromUserName>
+<FromUserName><![CDATA[hong_xiansheng]]></FromUserName>
 <CreateTime>1715721600</CreateTime>
 <MsgType><![CDATA[voice]]></MsgType>
 <MediaId><![CDATA[media_123]]></MediaId>
@@ -119,7 +119,7 @@ class TestMessageParsing:
     def test_parse_event_subscribe(self):
         xml = """<xml>
 <ToUserName><![CDATA[agent_001]]></ToUserName>
-<FromUserName><![CDATA[zhang_wei]]></FromUserName>
+<FromUserName><![CDATA[hong_xiansheng]]></FromUserName>
 <CreateTime>1715721600</CreateTime>
 <MsgType><![CDATA[event]]></MsgType>
 <Event><![CDATA[subscribe]]></Event>
@@ -132,10 +132,10 @@ class TestMessageParsing:
 
 class TestResponseBuilding:
     def test_build_text_response(self):
-        xml = build_text_response("user_001", "agent_001", "您好，张先生。")
+        xml = build_text_response("user_001", "agent_001", "您好，洪先生。")
         assert "<![CDATA[user_001]]>" in xml
         assert "<![CDATA[agent_001]]>" in xml
-        assert "<![CDATA[您好，张先生。]]>" in xml
+        assert "<![CDATA[您好，洪先生。]]>" in xml
 
     def test_build_voice_response(self):
         xml = build_voice_response("user_001", "agent_001", "media_456")
@@ -164,7 +164,7 @@ class TestMessageHandler:
         """Text message should route to AgentRunner."""
         msg = WeChatMessage(
             msg_type="text",
-            from_user="zhang_wei",
+            from_user="hong_xiansheng",
             to_user="agent_001",
             content="你好",
         )
@@ -183,7 +183,7 @@ class TestMessageHandler:
         """Voice without ASR should return processing message."""
         msg = WeChatMessage(
             msg_type="voice",
-            from_user="zhang_wei",
+            from_user="hong_xiansheng",
             to_user="agent_001",
             media_id="media_001",
             content="",  # No recognition yet
@@ -197,7 +197,7 @@ class TestMessageHandler:
         """Empty message should return no reply."""
         msg = WeChatMessage(
             msg_type="text",
-            from_user="zhang_wei",
+            from_user="hong_xiansheng",
             to_user="agent_001",
             content="",
         )
