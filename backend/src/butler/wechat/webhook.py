@@ -31,7 +31,16 @@ router = APIRouter(prefix="/wechat", tags=["wechat"])
 # Tenant/tool configuration — in production, looked up per-user
 # For MVP, we use a single demo tenant
 DEMO_TENANT_ID = "demo-001"
-DEMO_TOOLS = ToolRegistry()  # Tools registered in later phases
+_DEMO_TOOLS: ToolRegistry | None = None
+
+
+def _get_demo_tools() -> ToolRegistry:
+    """Lazy-init demo tools (avoids import cycle)."""
+    global _DEMO_TOOLS
+    if _DEMO_TOOLS is None:
+        from butler.api.deps import get_agent_tools
+        _DEMO_TOOLS = get_agent_tools("butler")
+    return _DEMO_TOOLS
 
 
 def _get_crypto() -> WeChatCrypto:
@@ -103,7 +112,7 @@ async def message_callback(
         result = await handle_message(
             msg,
             tenant_id=DEMO_TENANT_ID,
-            tools=DEMO_TOOLS,
+            tools=_get_demo_tools(),
         )
 
         # Build reply

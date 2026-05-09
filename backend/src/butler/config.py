@@ -233,5 +233,39 @@ class Settings(BaseSettings):
             db_path = Path(__file__).resolve().parent.parent.parent / "butler.db"
             object.__setattr__(self, "database_url", f"sqlite+aiosqlite:///{db_path}")
 
+        # Security: production readiness check
+        self._validate_production_security()
+
+    def _validate_production_security(self) -> None:
+        """Validate security-critical settings in non-dev environments."""
+        is_prod = os.environ.get("BUTLER_ENV", "") == "production"
+
+        if is_prod:
+            checks = []
+
+            # Master encryption key
+            master_key = os.environ.get("BUTLER_ENCRYPTION_MASTER_KEY", "")
+            if not master_key or master_key == "00" * 32:
+                checks.append(
+                    "BUTLER_ENCRYPTION_MASTER_KEY is not set or is the default all-zeros key"
+                )
+
+            # JWT secret validated separately in router_auth
+
+            # WeChat validation
+            if (
+                os.environ.get("BUTLER_WECHAT_CORP_ID", "")
+                and not os.environ.get("BUTLER_WECHAT_ENCODING_AES_KEY", "")
+            ):
+                checks.append(
+                    "WECHAT_CORP_ID is set but WECHAT_ENCODING_AES_KEY is empty"
+                )
+
+            if checks:
+                raise RuntimeError(
+                    "Security configuration errors in production:\n  - "
+                    + "\n  - ".join(checks)
+                )
+
 
 settings = Settings()

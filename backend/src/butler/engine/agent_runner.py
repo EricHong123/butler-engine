@@ -103,10 +103,11 @@ class AgentRunner:
             custom_override=self.config.custom_system_prompt,
         )
 
-        # Add user message
+        # Add user message with content boundary markers for injection defense
+        wrapped_prompt = f"<user_query>\n{prompt}\n</user_query>"
         user_msg: dict[str, Any] = {
             "role": "user",
-            "content": prompt,
+            "content": wrapped_prompt,
         }
         if attachments:
             user_msg["content"] = [
@@ -115,14 +116,20 @@ class AgentRunner:
             ]
         self.messages.append(user_msg)
 
-        # Run agent loop
+        # Run agent loop with budget enforcement
+        def _budget_check():
+            cost = self.estimated_cost_usd
+            return cost, cost >= self.config.max_budget_usd
+
         loop_config = LoopConfig(
             tenant_id=self.config.tenant_id,
             tools=self.config.tools,
             system_prompt=system_prompt,
             max_turns=self.config.max_turns,
+            max_budget_usd=self.config.max_budget_usd,
             compact_threshold_tokens=self.config.compact_threshold_tokens,
             enable_compact=self.config.enable_compact,
+            budget_check=_budget_check,
         )
 
         try:

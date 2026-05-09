@@ -44,8 +44,11 @@ class LoopConfig:
     tools: ToolRegistry
     system_prompt: list[dict]
     max_turns: int = 50
+    max_budget_usd: float = 5.0
     compact_threshold_tokens: int = 80_000
     enable_compact: bool = True
+    # Budget enforcement: callable that returns (current_cost, is_over_budget)
+    budget_check: Any = None
 
 
 @dataclass
@@ -87,6 +90,20 @@ async def agent_loop(
         if turn_count > config.max_turns:
             yield StreamEvent(type="done", data="Max turns reached")
             return
+
+        # ── Budget enforcement ──
+        if config.budget_check is not None:
+            try:
+                cost, over = config.budget_check()
+                if over:
+                    yield StreamEvent(
+                        type="done",
+                        data=f"Budget exceeded: ${cost:.4f} (limit: ${config.max_budget_usd:.2f})",
+                        metadata={"cost_usd": cost, "budget_limit": config.max_budget_usd},
+                    )
+                    return
+            except Exception:
+                pass  # Budget check is advisory — don't crash the loop
 
         # ── Step 1: Auto-compact ──
         if config.enable_compact and await should_auto_compact(
@@ -219,7 +236,16 @@ def _tool_error_block(tool_use_id: str, error: str) -> dict:
     }
 
 
-def _make_tool_context(config: LoopConfig, msgs: list[dict]) -> Any:
-    """Build minimal ToolUseContext for tool execution."""
-    from types import SimpleNamespace
-    return SimpleNamespace(tenant_id=config.tenant_id, messages=msgs)
+class ToolUseContext:
+    """Tenant-scoped context passed to every tool invocation."""
+
+    def __init__(self, tenant_id: str, messages: list[dict]) -> None:
+        if not tenant_id:
+            raise ValueError("tenant_id must not be empty")
+        self.tenant_id = tenant_id
+        self.messages = messages
+
+
+def _make_tool_context(config: LoopConfig, msgs: list[dict]) -> ToolUseContext:
+    """Build tenant-scoped ToolUseContext for tool execution."""
+    return ToolUseContext(tenant_id=config.tenant_id, messages=msgs)

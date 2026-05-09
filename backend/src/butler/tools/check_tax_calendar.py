@@ -31,12 +31,13 @@ class CheckTaxCalendarTool(BaseTool):
         return True
 
     async def call(self, args: dict, context: Any) -> ToolResult:
+        tenant_id = self._require_tenant(context)
         jurisdiction = args.get("jurisdiction", "all")
         date_range = args.get("date_range", "all_pending")
         tax_type = args.get("tax_type")
 
         today = date.today()
-        all_deadlines = _get_mock_deadlines(today)
+        all_deadlines = _get_mock_deadlines(today, tenant_id)
 
         # Filter by jurisdiction
         if jurisdiction and jurisdiction != "all":
@@ -89,10 +90,11 @@ class CheckTaxCalendarTool(BaseTool):
         return TaxCalendarInput
 
 
-def _get_mock_deadlines(today: date) -> list[dict[str, Any]]:
-    """Mock tax deadlines for 2026."""
+def _get_mock_deadlines(today: date, tenant_id: str = "demo-001") -> list[dict[str, Any]]:
+    """Mock tax deadlines for 2026. Tenant-filtered."""
     y = today.year
-    return [
+    _deadlines: dict[str, list[dict[str, Any]]] = {
+        "demo-001": [
         {
             "jurisdiction": "CN",
             "tax_type": "个人所得税 — 年度汇算清缴",
@@ -147,4 +149,6 @@ def _get_mock_deadlines(today: date) -> list[dict[str, Any]]:
             "currency": "CNY",
             "notes": "共同申报准则，金融机构自动交换",
         },
-    ]
+    ],
+    }
+    return _deadlines.get(tenant_id, _deadlines["demo-001"])

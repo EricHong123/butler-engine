@@ -32,6 +32,7 @@ class GenerateReportTool(BaseTool):
         return True
 
     async def call(self, args: dict, context: Any) -> ToolResult:
+        tenant_id = self._require_tenant(context)
         report_type = args.get("report_type", "asset_monthly")
         period = args.get("period", "2026-04")
         fmt = args.get("format", "markdown")

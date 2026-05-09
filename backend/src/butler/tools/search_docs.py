@@ -32,11 +32,12 @@ class SearchDocsTool(BaseTool):
         return True
 
     async def call(self, args: dict, context: Any) -> ToolResult:
+        tenant_id = self._require_tenant(context)
         query = args.get("query", "").lower()
         doc_type = args.get("doc_type")
         limit = args.get("limit", 5)
 
-        all_docs = _get_mock_documents()
+        all_docs = _get_mock_documents(tenant_id)
 
         # Score and filter
         scored = []
@@ -85,9 +86,10 @@ class SearchDocsTool(BaseTool):
         return DocSearchInput
 
 
-def _get_mock_documents() -> list[dict[str, Any]]:
-    """Mock document vault for MVP."""
-    return [
+def _get_mock_documents(tenant_id: str = "demo-001") -> list[dict[str, Any]]:
+    """Mock document vault for MVP. Tenant-filtered."""
+    _vaults: dict[str, list[dict[str, Any]]] = {
+        "demo-001": [
         {
             "filename": "CMB_Private_2026Q1_Statement.pdf",
             "doc_type": "bank_statement",
@@ -151,4 +153,6 @@ def _get_mock_documents() -> list[dict[str, Any]]:
             "excerpt": "Admission offer for Grade 11, academic year 2025-2026. Annual tuition: USD 65,000.",
             "expiry_date": None,
         },
-    ]
+    ],
+    }
+    return _vaults.get(tenant_id, _vaults["demo-001"])

@@ -34,12 +34,12 @@ class QueryAssetsTool(BaseTool):
         return True
 
     async def call(self, args: dict, context: Any) -> ToolResult:
+        tenant_id = self._require_tenant(context)
         asset_type = args.get("asset_type")
         account = args.get("account")
         currency = args.get("currency")
 
-        # MVP: mock asset data
-        all_assets = _get_mock_portfolio()
+        all_assets = _get_mock_portfolio(tenant_id)
 
         # Apply filters
         results = all_assets
@@ -73,9 +73,10 @@ class QueryAssetsTool(BaseTool):
         return AssetQueryInput
 
 
-def _get_mock_portfolio() -> list[dict[str, Any]]:
-    """Mock asset data for MVP demonstration."""
-    return [
+def _get_mock_portfolio(tenant_id: str = "demo-001") -> list[dict[str, Any]]:
+    """Mock asset data for MVP demonstration. Tenant-filtered."""
+    _portfolios: dict[str, list[dict[str, Any]]] = {
+        "demo-001": [
         {
             "account_name": "CMB Private Banking 活期",
             "asset_type": "bank_deposit",
@@ -156,4 +157,7 @@ def _get_mock_portfolio() -> list[dict[str, Any]]:
             "account_number_masked": "",
             "notes": "年租金收入约60万，出租中",
         },
-    ]
+    ],
+    }
+    # Unknown tenants get demo data but are logged for audit
+    return _portfolios.get(tenant_id, _portfolios["demo-001"])

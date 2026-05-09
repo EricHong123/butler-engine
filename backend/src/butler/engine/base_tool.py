@@ -82,7 +82,21 @@ class BaseTool(ABC, Generic[InputT, OutputT]):
 
     async def check_permissions(self, args: dict, context: "ToolUseContext") -> dict:
         """Return {behavior: 'allow'|'deny', updatedInput, message?}."""
+        tenant_id = getattr(context, "tenant_id", None)
+        if not tenant_id:
+            return {
+                "behavior": "deny",
+                "updatedInput": args,
+                "message": "Access denied: no tenant context",
+            }
         return {"behavior": "allow", "updatedInput": args}
+
+    def _require_tenant(self, context: "ToolUseContext") -> str:
+        """Validate tenant context and return tenant_id. Raises on missing."""
+        tid = getattr(context, "tenant_id", None)
+        if not tid:
+            raise PermissionError("工具调用缺少租户上下文 — 拒绝执行")
+        return tid
 
     def user_facing_name(self, input: dict | None = None) -> str:
         return self.name

@@ -33,13 +33,14 @@ class ScheduleEventTool(BaseTool):
         return input.get("action") in ("check", "list") if input else False
 
     async def call(self, args: dict, context: Any) -> ToolResult:
+        tenant_id = self._require_tenant(context)
         action = args.get("action", "list")
         title = args.get("title", "")
         datetime_str = args.get("datetime_str", "")
         duration = args.get("duration_minutes", 60)
         priority = args.get("priority", "normal")
 
-        existing_events = _get_mock_events()
+        existing_events = _get_mock_events(tenant_id)
 
         if action == "list":
             return ToolResult(data={
@@ -101,9 +102,10 @@ class ScheduleEventTool(BaseTool):
         return ScheduleInput
 
 
-def _get_mock_events() -> list[dict[str, Any]]:
-    """Mock calendar events."""
-    return [
+def _get_mock_events(tenant_id: str = "demo-001") -> list[dict[str, Any]]:
+    """Mock calendar events. Tenant-filtered."""
+    _calendars: dict[str, list[dict[str, Any]]] = {
+        "demo-001": [
         {
             "title": "季度资产回顾会议（与陈律师）",
             "datetime": "2026-05-15T14:00",
@@ -144,4 +146,6 @@ def _get_mock_events() -> list[dict[str, Any]]:
             "participants": "洪悦",
             "location": "上海音乐学院",
         },
-    ]
+    ],
+    }
+    return _calendars.get(tenant_id, _calendars["demo-001"])

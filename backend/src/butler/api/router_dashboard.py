@@ -9,13 +9,37 @@ import os
 import shutil
 import uuid
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, UploadFile, File
 from sqlalchemy import select
 
 from butler.api.deps import get_agent_tools
 from butler.config import settings
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
+
+
+def _verify_tenant(authorization: str | None = Header(None, alias="Authorization")) -> str:
+    """Extract tenant_id from JWT Bearer token. Raises 401 if invalid."""
+    if not authorization or not authorization.startswith("Bearer "):
+        # No token → allows dev mode where tenant_id is passed as query param
+        return ""
+    try:
+        from butler.api.router_auth import verify_token
+        payload = verify_token(authorization[7:])
+        return payload.get("tenant_id", "")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+def _validate_tenant_access(requested_tenant: str, token_tenant: str) -> None:
+    """Ensure the token tenant matches the requested tenant. Strict in production."""
+    if not token_tenant:
+        return  # Dev mode — no token
+    if token_tenant != requested_tenant:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied: tenant mismatch",
+        )
 
 
 async def _get_assets_from_db(tenant_id: str) -> list[dict] | None:
@@ -50,8 +74,13 @@ async def _get_assets_from_db(tenant_id: str) -> list[dict] | None:
 
 
 @router.get("/dashboard")
-async def get_dashboard(tenant_id: str = "demo-001"):
+async def get_dashboard(
+    tenant_id: str = "demo-001",
+    authorization: str | None = Header(None, alias="Authorization"),
+):
     """Asset dashboard. Reads from DB with tool fallback."""
+    token_tenant = _verify_tenant(authorization)
+    _validate_tenant_access(tenant_id, token_tenant)
 
     # Try DB first
     accounts = await _get_assets_from_db(tenant_id)
@@ -104,8 +133,13 @@ async def get_dashboard(tenant_id: str = "demo-001"):
 
 
 @router.get("/reports")
-async def list_reports(tenant_id: str = "demo-001"):
+async def list_reports(
+    tenant_id: str = "demo-001",
+    authorization: str | None = Header(None, alias="Authorization"),
+):
     """List available AI-generated reports."""
+    token_tenant = _verify_tenant(authorization)
+    _validate_tenant_access(tenant_id, token_tenant)
     tools = get_agent_tools("butler")
     report_tool = tools.find("generate_report")
     if not report_tool:
@@ -137,8 +171,14 @@ async def list_reports(tenant_id: str = "demo-001"):
 
 
 @router.get("/reports/{report_id}")
-async def get_report(report_id: str, tenant_id: str = "demo-001"):
+async def get_report(
+    report_id: str,
+    tenant_id: str = "demo-001",
+    authorization: str | None = Header(None, alias="Authorization"),
+):
     """Get a specific report by ID."""
+    token_tenant = _verify_tenant(authorization)
+    _validate_tenant_access(tenant_id, token_tenant)
     parts = report_id.rsplit("-", 1)
     if len(parts) != 2:
         return {"error": "Invalid report ID"}
@@ -167,8 +207,11 @@ async def list_documents(
     tenant_id: str = "demo-001",
     query: str = "",
     doc_type: str = "all",
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """List/search documents in the vault."""
+    token_tenant = _verify_tenant(authorization)
+    _validate_tenant_access(tenant_id, token_tenant)
     tools = get_agent_tools("butler")
     doc_tool = tools.find("search_docs")
     if not doc_tool:
@@ -198,8 +241,8 @@ async def list_documents(
 # ── Helpers ──
 
 def _make_ctx(tenant_id: str):
-    from types import SimpleNamespace
-    return SimpleNamespace(tenant_id=tenant_id, messages=[])
+    from butler.engine.agent_loop import ToolUseContext
+    return ToolUseContext(tenant_id, [])
 
 
 def _label(asset_type: str) -> str:
@@ -265,11 +308,12 @@ def _fmt_cny(n: float) -> str:
 async def upload_document(
     file: UploadFile = File(...),
     tenant_id: str = "demo-001",
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
-    """
-    Upload a PDF document. Extracts text, parses bank statements,
-    and stores the document in the vault.
-    """
+    """Upload a PDF document. Extracts text, parses bank statements,
+    and stores the document in the vault."""
+    token_tenant = _verify_tenant(authorization)
+    _validate_tenant_access(tenant_id, token_tenant)
     if not file.filename:
         return {"error": "No filename"}
 

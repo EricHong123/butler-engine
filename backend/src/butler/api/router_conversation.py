@@ -11,9 +11,10 @@ import json
 import uuid
 import asyncio
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 
+from butler.api.authorization import can_use_agent, is_sensitive_agent
 from butler.api.deps import get_agent_tools, get_full_registry
 from butler.api.schemas import ChatRequest
 from butler.engine.agent_definitions import DEFAULT_AGENT, AGENT_ICONS, get_agent, list_agents
@@ -40,8 +41,20 @@ async def get_agents():
     return {"agents": list_agents(), "default": DEFAULT_AGENT}
 
 
+def _extract_role_from_token(authorization: str | None) -> str:
+    """Extract user role from JWT Bearer token. Returns 'principal' if no token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return "principal"
+    try:
+        from butler.api.router_auth import verify_token
+        payload = verify_token(authorization[7:])
+        return payload.get("role", "principal")
+    except Exception:
+        return "principal"
+
+
 @router.post("/chat")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, authorization: str | None = Header(None, alias="Authorization")):
     """
     Streaming chat endpoint. Returns SSE (Server-Sent Events) stream.
 
@@ -50,6 +63,22 @@ async def chat(request: ChatRequest):
     """
     tenant_id = request.tenant_id
     agent_type = request.agent_type or DEFAULT_AGENT
+
+    # Authorization: extract role from JWT and check against agent allowlist
+    user_role = _extract_role_from_token(authorization)
+    if not can_use_agent(user_role, agent_type):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Agent '{agent_type}' is not available for role '{user_role}'",
+        )
+
+    # Sensitive agent gate: only principal and admin can use wealth/tax agents
+    if is_sensitive_agent(agent_type) and user_role not in ("principal", "admin"):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Agent '{agent_type}' requires principal or admin role, not '{user_role}'",
+        )
+
     agent = get_agent(agent_type)
     tools = get_agent_tools(agent_type)
 
@@ -97,7 +126,7 @@ async def chat(request: ChatRequest):
     # Check if we have a working LLM
     if runner._llm is None:
         return StreamingResponse(
-            _mock_chat_stream(request.message, tools, conv_id, agent_type, profile_md, memory_idx),
+            _mock_chat_stream(request.message, tools, conv_id, agent_type, profile_md, memory_idx, tenant_id),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
         )
@@ -219,6 +248,7 @@ async def _mock_chat_stream(
     agent_type: str,
     profile_md: str | None,
     memory_idx: str | None,
+    tenant_id: str = "demo-001",
 ):
     """Fallback chat that uses real tools with mock data. No LLM API call needed."""
     msg_lower = message.lower()
@@ -254,11 +284,8 @@ async def _mock_chat_stream(
         yield f"data: {_json.dumps({'type': 'tool_call', 'data': {'id': tool_id, 'name': tool_name, 'input': tool_input}, 'conversation_id': conv_id}, ensure_ascii=False)}\n\n"
         await asyncio.sleep(0.3)
 
-        class _Ctx:
-            tenant_id = 'demo-001'
-            messages = []
-
-        result = await tool.call(tool_input, _Ctx())
+        from butler.engine.agent_loop import ToolUseContext as _ToolUseContext
+        result = await tool.call(tool_input, _ToolUseContext(tenant_id, []))
         result_text = _json.dumps(result.data, ensure_ascii=False, default=str)
         yield f"data: {_json.dumps({'type': 'tool_result', 'data': {'tool_use_id': tool_id, 'result': result_text}, 'conversation_id': conv_id}, ensure_ascii=False)}\n\n"
         await asyncio.sleep(0.2)

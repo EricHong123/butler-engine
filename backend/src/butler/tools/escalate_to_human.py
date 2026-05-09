@@ -41,6 +41,7 @@ class EscalateToHumanTool(BaseTool):
         return True
 
     async def call(self, args: dict, context: Any) -> ToolResult:
+        tenant_id = self._require_tenant(context)
         reason = args.get("reason", "other")
         priority = args.get("priority", "standard")
         ctx_text = args.get("context", "")
@@ -48,8 +49,6 @@ class EscalateToHumanTool(BaseTool):
 
         ticket_id = f"REV-{uuid.uuid4().hex[:8].upper()}"
 
-        # In production, this pushes to Redis queue and notifies reviewers.
-        # For MVP, we return the ticket with instructions for manual handling.
         review_ticket = {
             "ticket_id": ticket_id,
             "reason": reason,
@@ -59,7 +58,7 @@ class EscalateToHumanTool(BaseTool):
             "draft_response": draft,
             "status": "pending_review",
             "created_at": datetime.now(tz=timezone.utc).isoformat(),
-            "tenant_id": getattr(context, "tenant_id", "unknown"),
+            "tenant_id": tenant_id,
         }
 
         return ToolResult(data=review_ticket)
