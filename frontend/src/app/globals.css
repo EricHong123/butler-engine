@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════
+   4 Theme Color Schemes
+   Switch via data-theme on <html>
+   ═══════════════════════════════════════════════ */
+
+:root,
+[data-theme="dark-gold"] {
+  --accent:        #C9A03A;                /* slightly desaturated gold */
+  --accent-light:  #DDC078;
+  --accent-dim:    #7A5C14;
+  --accent-bg:     rgba(212, 168, 60, 0.10);
+  --accent-border: rgba(212, 168, 60, 0.20);
+  --accent-text:   #C9A03A;
+  --btn-primary-bg: #C9A03A;
+  --btn-primary-text: #000000;
+  --stat-color:    #C9A03A;
+  --link-color:    #DDC078;
+  --badge-bg:      rgba(212, 168, 60, 0.10);
+  --badge-text:    #C9A03A;
+  --surface:       #0C0E12;
+  --card:          #1A1D24;
+  --muted:         #9CA3AF;                /* 6.5:1 on surface — WCAG AA */
+  --border:        rgba(128,128,128,0.22);
+}
+
+[data-theme="midnight-blue"] {
+  --accent:        #60A5FA;
+  --accent-light:  #93C5FD;
+  --accent-dim:    #1E40AF;
+  --accent-bg:     rgba(96, 165, 250, 0.12);
+  --accent-border: rgba(96, 165, 250, 0.22);
+  --accent-text:   #93C5FD;
+  --btn-primary-bg: #3B82F6;
+  --btn-primary-text: #FFFFFF;
+  --stat-color:    #60A5FA;
+  --link-color:    #93C5FD;
+  --badge-bg:      rgba(96, 165, 250, 0.12);
+  --badge-text:    #93C5FD;
+  --surface:       #080C14;
+  --card:          #111827;
+  --muted:         #7B8CA0;
+  --border:        rgba(96,165,250,0.12);
+}
+
+[data-theme="forest-green"] {
+  --accent:        #4ADE80;
+  --accent-light:  #86EFAC;
+  --accent-dim:    #166534;
+  --accent-bg:     rgba(74, 222, 128, 0.12);
+  --accent-border: rgba(74, 222, 128, 0.22);
+  --accent-text:   #86EFAC;
+  --btn-primary-bg: #22C55E;
+  --btn-primary-text: #000000;
+  --stat-color:    #4ADE80;
+  --link-color:    #86EFAC;
+  --badge-bg:      rgba(74, 222, 128, 0.12);
+  --badge-text:    #86EFAC;
+  --surface:       #080C08;
+  --card:          #111A13;
+  --muted:         #7A9A7A;
+  --border:        rgba(74,222,128,0.12);
+}
+
+[data-theme="warm-amber"] {
+  --accent:        #FB923C;
+  --accent-light:  #FDBA74;
+  --accent-dim:    #C2410C;
+  --accent-bg:     rgba(251, 146, 60, 0.12);
+  --accent-border: rgba(251, 146, 60, 0.22);
+  --accent-text:   #FDBA74;
+  --btn-primary-bg: #F97316;
+  --btn-primary-text: #FFFFFF;
+  --stat-color:    #FB923C;
+  --link-color:    #FDBA74;
+  --badge-bg:      rgba(251, 146, 60, 0.12);
+  --badge-text:    #FDBA74;
+  --surface:       #100A06;
+  --card:          #1F1610;
+  --muted:         #9A8575;
+  --border:        rgba(251,146,60,0.12);
+}

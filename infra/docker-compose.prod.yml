@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ../backend
+    ports: ["8000:8000"]
+    environment:
+      - BUTLER_PROVIDER=${BUTLER_PROVIDER:-deepseek}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - BUTLER_CHAT_MODEL=${BUTLER_CHAT_MODEL:-deepseek-chat}
+      - BUTLER_DATABASE_URL=postgresql+asyncpg://butler:${DB_PASSWORD:-butler}@db:5432/butler
+      - BUTLER_REDIS_URL=redis://redis:6379/0
+      - BUTLER_JWT_SECRET=${BUTLER_JWT_SECRET:-change-me-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ../frontend
+    ports: ["3000:3000"]
+    environment:
+      - NODE_ENV=production
+    depends_on: [backend]
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: butler
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-butler}
+      POSTGRES_DB: butler
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U butler"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+
+  nginx:
+    image: nginx:alpine
+    ports: ["80:80"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [backend, frontend]
+
+volumes:
+  pgdata:
+  redisdata:

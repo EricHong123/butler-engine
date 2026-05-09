@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════════════
+   Butler Engine — WCAG 2.1 AA Accessible Styles
+   Static file, zero build pipeline dependency
+   ═══════════════════════════════════════════════ */
+
+/* ── Base ── */
+body {
+  background-color: var(--surface);
+  color: #e5e7eb;                          /* 12.8:1 on surface — AAA */
+  -webkit-font-smoothing: antialiased;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: .9375rem;                      /* 15px minimum body */
+  line-height: 1.6;
+}
+
+/* ── Skip Link ── */
+.skip-link {
+  position: absolute; top: -100px; left: 1rem; z-index: 9999;
+  background: var(--accent); color: #000; padding: .5rem 1rem;
+  border-radius: 0 0 .5rem .5rem; font-weight: 600; font-size: .875rem;
+}
+.skip-link:focus { top: 0; }
+
+/* ── Typography Scale (WCAG: body ≥ 14px, line-height ≥ 1.5) ── */
+h1, .fs-display { font-size: 1.75rem; line-height: 1.3; font-weight: 700; }
+h2, .fs-title   { font-size: 1.25rem; line-height: 1.4; font-weight: 700; }
+h3, .fs-subtitle { font-size: 1rem; line-height: 1.5; font-weight: 600; }
+p, .fs-body      { font-size: .9375rem; line-height: 1.6; }
+.fs-caption      { font-size: .8125rem; line-height: 1.5; }   /* 13px min */
+.fs-micro        { font-size: .75rem; line-height: 1.4; }     /* 12px min — never 10px */
+
+/* ── Spacing (generous, consistent) ── */
+.gap-xs { gap: .25rem; } .gap-sm { gap: .5rem; } .gap-md { gap: 1rem; }
+.gap-lg { gap: 1.5rem; } .gap-xl { gap: 2rem; } .gap-2xl { gap: 3rem; }
+
+/* ── Cards — clear border, generous padding ── */
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);          /* 3:1 border minimum */
+  border-radius: .75rem;
+  padding: 1.5rem;
+}
+.card-sm {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: 1rem;
+}
+
+/* ── Buttons — large touch target (≥ 44px), clear boundary ── */
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-weight: 600; font-size: .9375rem;
+  padding: .75rem 1.5rem; min-height: 2.75rem;  /* 44px touch target */
+  border-radius: .5rem; border: 2px solid transparent;
+  cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-primary:hover  { filter: brightness(1.12); }
+.btn-primary:active { filter: brightness(.95); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px;
+}
+
+.btn-secondary {
+  background-color: #1f2937; color: #e5e7eb;
+  font-size: .9375rem; padding: .75rem 1.5rem;
+  border-radius: .5rem; border: 1px solid #4b5563;  /* 3:1 border */
+  cursor: pointer; min-height: 2.75rem;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-secondary:hover   { background-color: #2d3748; border-color: #6b7280; }
+.btn-secondary:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px;
+}
+
+/* ── Stats ── */
+.stat-value {
+  font-size: 1.875rem; line-height: 1.3; font-weight: 700;
+  color: var(--stat-color);
+}
+.stat-label {
+  font-size: .8125rem; line-height: 1.5;
+  color: var(--muted); margin-top: .25rem;
+}
+
+/* ── Input fields — clear boundary, large target, visible focus ── */
+input[type="text"], input[type="password"], input[type="search"],
+input[type="email"], textarea, select {
+  font-size: .9375rem; line-height: 1.5;           /* 15px minimum */
+  padding: .625rem .75rem; min-height: 2.75rem;     /* 44px touch */
+  background-color: var(--card);
+  color: #e5e7eb;
+  border: 1px solid #4b5563;                        /* 3:1 border */
+  border-radius: .5rem;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  outline: none;
+}
+
+/* ── Sidebar Navigation — visible active indicator ── */
+.sidebar-nav a {
+  border-left: 3px solid transparent; margin-left: -3px;
+  font-size: .875rem; line-height: 1.5;
+  min-height: 2.5rem; display: flex; align-items: center;
+}
+.sidebar-nav a.active {
+  border-left-color: var(--accent);
+  background-color: var(--accent-bg);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.sidebar-nav a:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: -1px;
+}
+
+/* ── Progress Bars ── */
+.progress-bar {
+  height: 8px; border-radius: 4px;
+  background: rgba(255,255,255,.08); overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  min-width: 2px; /* always visible even at very low % */
+}
+
+/* ── Status indicators — icon + text + color, never color alone ── */
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.status-badge {
+  display: inline-flex; align-items: center; gap: .375rem;
+  font-size: .8125rem; font-weight: 500; padding: .25rem .625rem;
+  border-radius: 999px; line-height: 1.4;
+}
+.status-urgent  { background: rgba(239,68,68,.12); color: #fca5a5; }
+.status-warning { background: rgba(234,179,8,.12);  color: #fde68a; }
+.status-ok      { background: rgba(34,197,94,.12);  color: #86efac; }
+.status-info    { background: rgba(59,130,246,.12); color: #93c5fd; }
+
+/* ── Animations — all wrapped in prefers-reduced-motion ── */
+@media (prefers-reduced-motion: no-preference) {
+  html { transition: background-color .4s ease; }
+
+  .card, .card-sm {
+    transition: border-color .2s ease;
+  }
+
+  .btn-primary {
+    transition: filter .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary:hover { box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+
+  .progress-bar-fill {
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%,60% { transform: translateX(-4px); }
+    40%,80% { transform: translateX(4px); }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-glow {
+    0%,100% { box-shadow: 0 0 0 0 var(--accent-bg); }
+    50%     { box-shadow: 0 0 0 6px transparent; }
+  }
+  .animate-shake    { animation: shake .4s ease; }
+  .animate-fade-in  { animation: fadeInUp .3s ease; }
+  .animate-glow     { animation: pulse-glow 2s infinite; }
+  .msg-user         { animation: fadeInUp .2s ease; }
+  .msg-assistant    { animation: fadeInUp .25s ease; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ── Focus ring — WCAG 2.4.7: focus visible ── */
+*:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Exceptions: these elements manage their own focus styles */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.sidebar-nav a:focus-visible,
+input:focus, textarea:focus, select:focus {
+  outline: none; /* handled inline above */
+}
+
+/* ── Scrollbar ── */
+@media (hover: hover) {
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+}
+
+/* ── Selection ── */
+::selection { background: var(--accent); color: #000; }
+
+/* ── Custom utilities ── */
+.bg-surface { background-color: var(--surface); }
+.bg-card    { background-color: var(--card); }
+.text-muted { color: var(--muted); }
+.border-subtle { border-color: var(--border); }
+
+/* ── Screen reader only ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0;
+  margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   Film Grain — subtle noise overlay for warmth
+   ═══════════════════════════════════════════════ */
+
+/* Full-screen grain — fixed, non-interactive, behind content */
+.grain-overlay {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: .06;                             /* 6% — subtle enough to feel, not distract */
+  background: transparent;
+}
+.grain-overlay::after {
+  content: '';
+  position: absolute; inset: 0;
+  filter: url(#grain-filter);
+}
+
+/* Card grain — even lighter touch on elevated surfaces */
+.card, .card-sm {
+  position: relative;
+}
+.card::before, .card-sm::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none; border-radius: inherit;
+  opacity: .04;                             /* 4% on cards — barely there */
+  filter: url(#grain-filter);
+}
+.card > *, .card-sm > * {
+  position: relative; z-index: 2;           /* Content above grain */
+}
+
+/* Input grain — micro texture */
+input, textarea, select {
+  position: relative;
+}
+
+/* Reduced motion: disable grain animation (turbulence is static by default, safe) */
+@media (prefers-reduced-motion: reduce) {
+  .grain-overlay, .card::before, .card-sm::before {
+    opacity: .02;                           /* barely visible */
+  }
+}
+
+/* Prefer less transparency: bump up slightly for LCD/glossy screens */
+@media (prefers-contrast: high) {
+  .grain-overlay { opacity: .03; }
+  .card::before, .card-sm::before { opacity: .02; }
+}
