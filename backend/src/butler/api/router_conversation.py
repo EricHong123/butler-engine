@@ -29,6 +29,8 @@ router = APIRouter(prefix="/api", tags=["conversation"])
 
 # Per-agent runners: key = (tenant_id, agent_type)
 _runners: dict[str, AgentRunner] = {}
+# Secondary index: conversation_id → (tenant_id, agent_type)
+_conv_index: dict[str, str] = {}
 
 
 def _runner_key(tenant_id: str, agent_type: str) -> str:
@@ -120,6 +122,8 @@ async def chat(request: ChatRequest, authorization: str | None = Header(None, al
                 pass
         runner = AgentRunner(config, llm=llm)
         _runners[key] = runner
+        # Register conversation in secondary index
+        _conv_index[runner.get_conversation_id()] = key
     else:
         runner = _runners[key]
 
@@ -206,11 +210,21 @@ async def get_cost_summary():
 @router.get("/conversations/{conv_id}")
 async def get_conversation(conv_id: str):
     """Get message history for a conversation."""
-    runner = _runners.get(conv_id)
+    # Look up via secondary index: conv_id → runner_key → runner
+    key = _conv_index.get(conv_id)
+    if key:
+        runner = _runners.get(key)
+    else:
+        # Fallback: search all runners for matching session
+        runner = None
+        for r in _runners.values():
+            if r.get_conversation_id() == conv_id:
+                runner = r
+                break
     if not runner:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return {
-        "conversation_id": conv_id,
+        "conversation_id": runner.get_conversation_id(),
         "messages": runner.messages,
         "session_id": runner.get_session_id(),
     }
@@ -233,6 +247,9 @@ async def reset_conversation(tenant_id: str = "demo-001", agent_type: str = "but
     """Reset a conversation for a specific agent (clear history)."""
     key = _runner_key(tenant_id, agent_type)
     if key in _runners:
+        # Clean up secondary index
+        conv_id = _runners[key].get_conversation_id()
+        _conv_index.pop(conv_id, None)
         del _runners[key]
     return {"status": "reset", "tenant_id": tenant_id, "agent_type": agent_type}
 

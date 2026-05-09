@@ -77,22 +77,66 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') return sessionStorage.getItem('butler_conv_id');
+    return null;
+  });
   const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set());
   const [chatConfig, setChatConfig] = useState<{ provider: string; model: string; has_api_key: boolean } | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<string>('butler');
+  const [selectedAgent, setSelectedAgent] = useState<string>(() => {
+    if (typeof window !== 'undefined') return sessionStorage.getItem('butler_agent') || 'butler';
+    return 'butler';
+  });
   const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Persist conversation ID and agent to sessionStorage
+  useEffect(() => {
+    if (conversationId) sessionStorage.setItem('butler_conv_id', conversationId);
+    else sessionStorage.removeItem('butler_conv_id');
+  }, [conversationId]);
+
+  useEffect(() => {
+    sessionStorage.setItem('butler_agent', selectedAgent);
+  }, [selectedAgent]);
+
+  // Load config, agents, and conversation history on mount
   useEffect(() => {
     fetch('/api/backend/api/config').then(r => r.json()).then(setChatConfig).catch(() => {});
     fetch('/api/backend/api/agents').then(r => r.json()).then(d => {
       setAgents(d.agents);
-      if (d.default) setSelectedAgent(d.default);
+      if (d.default && !sessionStorage.getItem('butler_agent')) setSelectedAgent(d.default);
     }).catch(() => {});
   }, []);
+
+  // Reload conversation history from backend on mount
+  useEffect(() => {
+    if (historyLoaded) return;
+    const convId = sessionStorage.getItem('butler_conv_id');
+    if (!convId) { setHistoryLoaded(true); return; }
+
+    fetch(`/api/backend/api/conversations/${convId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.messages?.length) {
+          const msgs: Message[] = data.messages
+            .filter((m: { role: string }) => m.role === 'user' || m.role === 'assistant')
+            .map((m: { role: string; content: string | { text: string }[] }, i: number) => ({
+              id: `hist-${i}`,
+              role: m.role as 'user' | 'assistant',
+              content: typeof m.content === 'string' ? m.content : (Array.isArray(m.content) ? m.content.map((c: { text?: string }) => c.text || '').join('') : ''),
+              timestamp: Date.now() - (data.messages.length - i) * 1000,
+            }));
+          setMessages(msgs);
+          setConversationId(convId);
+        }
+        setHistoryLoaded(true);
+      })
+      .catch(() => setHistoryLoaded(true));
+  }, [historyLoaded]);
 
   const currentAgent = agents.find(a => a.agent_type === selectedAgent);
 
@@ -101,7 +145,9 @@ export default function ChatPage() {
     setSelectedAgent(agentType);
     setMessages([]);
     setConversationId(null);
+    setHistoryLoaded(false);
     setShowAgentPicker(false);
+    sessionStorage.removeItem('butler_conv_id');
     // Reset conversation on backend
     fetch(`/api/backend/api/conversations/reset?agent_type=${agentType}`, { method: 'POST' }).catch(() => {});
   }
@@ -239,6 +285,8 @@ export default function ChatPage() {
     fetch(`/api/backend/api/conversations/reset?agent_type=${selectedAgent}`, { method: 'POST' }).catch(() => {});
     setMessages([]);
     setConversationId(null);
+    setHistoryLoaded(true); // Prevent re-loading deleted conversation
+    sessionStorage.removeItem('butler_conv_id');
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
