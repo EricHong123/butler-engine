@@ -40,6 +40,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Rate limiting middleware (applied to all /api routes)
+    from butler.api.middleware import RateLimitMiddleware
+    app.add_middleware(RateLimitMiddleware)
+
     from butler.wechat.webhook import router as wechat_router
     app.include_router(wechat_router)
 
@@ -61,6 +65,11 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health():
         return {"status": "ok", "app": settings.app_name}
+
+    @app.get("/api/rate-limit-status")
+    async def rate_limit_status(tenant_id: str = "demo-001"):
+        from butler.api.middleware import get_rate_limit_status
+        return get_rate_limit_status(tenant_id)
 
     return app
 

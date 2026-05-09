@@ -32,15 +32,30 @@ class ParsedStatement:
     confidence: float = 0.0
 
 
-def extract_text_from_pdf(file_path: Path | str) -> str:
-    """Extract all text from a PDF file using pdfplumber."""
+def extract_text_from_pdf(file_path: Path | str, scan_injection: bool = True) -> str:
+    """Extract all text from a PDF file using pdfplumber.
+    Optionally scans extracted text for prompt injection patterns."""
     text_parts: list[str] = []
     with pdfplumber.open(str(file_path)) as pdf:
         for page in pdf.pages:
             page_text = page.extract_text()
             if page_text:
                 text_parts.append(page_text)
-    return "\n---PAGE BREAK---\n".join(text_parts)
+    full_text = "\n---PAGE BREAK---\n".join(text_parts)
+
+    if scan_injection and full_text:
+        from butler.services.guard import scan_content
+        guard = scan_content(full_text, threshold=30)
+        if guard.is_suspicious:
+            # Log but don't block — PDF content is wrapped in tags by the caller
+            import logging
+            logging.getLogger("butler.pdf").warning(
+                "PDF contains suspicious content: score=%d patterns=%s",
+                guard.score,
+                [m["pattern"] for m in guard.matches],
+            )
+
+    return full_text
 
 
 def parse_with_rules(text: str, filename: str = "") -> ParsedStatement:

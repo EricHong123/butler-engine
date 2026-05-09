@@ -45,6 +45,34 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
+async def set_tenant_context(tenant_id: str, session=None) -> None:
+    """
+    Set PostgreSQL session variable for RLS tenant isolation.
+
+    Must be called before any query on tenant-scoped tables.
+    Uses SET LOCAL so it applies only to the current transaction.
+    """
+    if not tenant_id:
+        return
+    if session:
+        await session.execute(
+            __import__("sqlalchemy").text(
+                f"SELECT set_config('app.tenant_id', :tid, true)"
+            ),
+            {"tid": tenant_id},
+        )
+    else:
+        engine = get_engine()
+        async with engine.connect() as conn:
+            await conn.execute(
+                __import__("sqlalchemy").text(
+                    f"SELECT set_config('app.tenant_id', :tid, false)"
+                ),
+                {"tid": tenant_id},
+            )
+            await conn.commit()
+
+
 async def init_db() -> None:
     """Create all tables (dev only — use Alembic in production)."""
     from butler.models.base import Base

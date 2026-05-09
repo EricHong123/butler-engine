@@ -215,6 +215,28 @@ async def handle_message(
 
     # ── Text messages ──
     if msg.msg_type == "text" and msg.content:
+        # Guard: scan for prompt injection
+        from butler.services.guard import scan_content, GuardResult
+        guard = scan_content(msg.content, threshold=30)
+        if guard.is_blocked:
+            return HandlerResult(
+                reply_xml=build_text_response(
+                    msg.from_user, msg.to_user,
+                    "您的消息包含异常指令，已被安全系统拦截。如需帮助请联系人工客服。",
+                ),
+                needs_review=False,
+                ticket=None,
+            )
+        elif guard.is_suspicious:
+            # Flag for review but still process
+            from butler.engine.audit import audit_security_event
+            import asyncio as _asyncio
+            _asyncio.ensure_future(audit_security_event(
+                tenant_id=tenant_id,
+                event_type="injection_suspicious",
+                details=f"score={guard.score} patterns={[m['pattern'] for m in guard.matches]}",
+            ))
+
         # Get or create AgentRunner for this user
         runner = get_or_create_runner(
             msg.from_user, tenant_id, tools, profile_md, memory_idx

@@ -32,16 +32,24 @@ class MemoryEntry:
     created_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(tz=timezone.utc))
     file_name: str = ""  # e.g., "topic_2026_q1.md"
+    agent_source: str = ""  # which agent created this (e.g., "wealth_advisor")
+    access_level: str = "normal"  # "normal" or "restricted" (wealth/health sensitive)
 
     def to_frontmatter(self) -> str:
-        return (
-            f"---\n"
-            f"name: {self.name}\n"
-            f"description: {self.description}\n"
-            f"type: {self.memory_type.value}\n"
-            f"---\n\n"
-            f"{self.content}\n"
-        )
+        parts = [
+            f"---",
+            f"name: {self.name}",
+            f"description: {self.description}",
+            f"type: {self.memory_type.value}",
+        ]
+        if self.agent_source:
+            parts.append(f"agent_source: {self.agent_source}")
+        if self.access_level != "normal":
+            parts.append(f"access_level: {self.access_level}")
+        parts.append(f"---")
+        parts.append(f"")
+        parts.append(f"{self.content}")
+        return "\n".join(parts) + "\n"
 
     def to_index_line(self) -> str:
         return (
@@ -110,8 +118,27 @@ class MemoryManager:
         """
         Save a new memory — writes the topic file AND updates the index.
         Port of the Write tool + memdir interaction from Claude Code.
+
+        Security: scans content for prompt injection patterns before saving.
         """
         await self.ensure_dir()
+
+        # Security scan: reject memory content that contains injection patterns
+        from butler.services.guard import scan_content
+        guard = scan_content(entry.content, threshold=25)
+        if guard.is_blocked:
+            raise ValueError(
+                f"Memory content rejected: contains prompt injection patterns "
+                f"(score={guard.score})"
+            )
+        if guard.is_suspicious:
+            from butler.engine.audit import audit_security_event
+            import asyncio as _asyncio
+            _asyncio.ensure_future(audit_security_event(
+                tenant_id=self.tenant_id,
+                event_type="memory_injection_suspicious",
+                details=f"score={guard.score} patterns={[m['pattern'] for m in guard.matches]}",
+            ))
 
         # Generate file name if not set
         if not entry.file_name:
@@ -216,4 +243,6 @@ class MemoryManager:
             memory_type=mem_type,
             content=body,
             file_name=file_name,
+            agent_source=fm.get("agent_source", ""),
+            access_level=fm.get("access_level", "normal"),
         )

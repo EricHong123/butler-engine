@@ -28,6 +28,9 @@ from butler.engine.tool_registry import ToolRegistry
 from butler.services.llm.client import LLMClient, get_llm_client
 from butler.services.llm.router import route_model
 
+import asyncio as _asyncio
+from butler.engine.audit import audit_tool_call, audit_turn
+
 
 @dataclass
 class StreamEvent:
@@ -197,6 +200,14 @@ async def agent_loop(
                 ctx = _make_tool_context(config, messages)
                 result = await tool.call(input_dict, ctx)  # type: ignore[arg-type]
                 result_text = json.dumps(result.data, ensure_ascii=False, default=str)
+
+                # Fire-and-forget audit: tool invocation logged
+                _asyncio.ensure_future(audit_tool_call(
+                    tenant_id=config.tenant_id,
+                    tool_name=tc.name,
+                    tool_input=input_dict,
+                    tool_output=result_text,
+                ))
 
                 yield StreamEvent(
                     type="tool_result",
