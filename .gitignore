@@ -27,3 +27,4 @@ Thumbs.db
 
 # Data
 backend/data/
+infra/.env

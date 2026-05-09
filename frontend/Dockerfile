@@ -1,7 +1,11 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
+
+# Install deps first (layer cache)
 COPY package.json package-lock.json ./
 RUN npm ci
+
+# Copy source and build
 COPY . .
 ARG BACKEND_URL=http://backend:8000
 ENV BACKEND_URL=${BACKEND_URL}
