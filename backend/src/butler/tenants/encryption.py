@@ -45,19 +45,43 @@ class TenantEncryption:
         if master_key_hex:
             self._master_key = bytes.fromhex(master_key_hex)
         else:
-            self._master_key = bytes.fromhex(
-                os.environ.get(
-                    "BUTLER_ENCRYPTION_MASTER_KEY",
-                    "00" * 32,  # Default: all-zeros (dev only!)
-                )
-            )
+            # Try KMS first, then env var, then dev default
+            self._master_key = self._resolve_master_key()
 
         if len(self._master_key) != 32:
             raise ValueError("Master key must be 32 bytes (64 hex chars)")
 
-        # In production, data keys are stored in DB.
-        # For MVP, we store them in memory.
         self._data_keys: dict[str, list[DataKey]] = {}
+
+    @staticmethod
+    def _resolve_master_key() -> bytes:
+        """Resolve master key: KMS > env var > dev default."""
+        # Try to unwrap via KMS if configured
+        kms_provider = os.environ.get("BUTLER_KMS_PROVIDER", "")
+        encrypted_key_b64 = os.environ.get("BUTLER_ENCRYPTION_MASTER_KEY_ENCRYPTED", "")
+
+        if kms_provider and encrypted_key_b64:
+            try:
+                import asyncio
+                from butler.tenants.kms import get_kms_client
+                kms = get_kms_client()
+                if kms.is_available:
+                    encrypted_key = __import__("base64").b64decode(encrypted_key_b64)
+                    # Run async decrypt in a sync context (startup only)
+                    loop = asyncio.new_event_loop()
+                    try:
+                        plaintext = loop.run_until_complete(
+                            kms.decrypt(encrypted_key)
+                        )
+                        return plaintext
+                    finally:
+                        loop.close()
+            except Exception:
+                pass  # Fall through to env var
+
+        # Direct env var (dev or non-KMS prod)
+        key_hex = os.environ.get("BUTLER_ENCRYPTION_MASTER_KEY", "00" * 32)
+        return bytes.fromhex(key_hex)
 
     def get_or_create_data_key(self, tenant_id: str) -> DataKey:
         """Get the active data key for a tenant, creating one if needed."""

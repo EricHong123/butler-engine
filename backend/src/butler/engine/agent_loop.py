@@ -30,6 +30,8 @@ from butler.services.llm.router import route_model
 
 import asyncio as _asyncio
 from butler.engine.audit import audit_tool_call, audit_turn
+from butler.services.pii_detector import PiiStreamAccumulator, mask_text
+from butler.services.anomaly import get_anomaly_detector
 
 
 @dataclass
@@ -78,6 +80,7 @@ async def agent_loop(
     tracker = CompactTracker()
     turn_count = 0
     final_text_parts: list[str] = []
+    pii_acc = PiiStreamAccumulator()
 
     def _make_done() -> StreamEvent:
         return StreamEvent(
@@ -141,8 +144,13 @@ async def agent_loop(
             tools=api_tools if api_tools else None,
         ):
             if event["type"] == "text_delta":
-                final_text_parts.append(event["text"])
-                yield StreamEvent(type="text_delta", data=event["text"])
+                text = event["text"]
+                # PII filtering: scan and mask streaming output
+                if pii_acc.is_blocked:
+                    continue  # Suppress further output
+                clean = pii_acc.feed(text)
+                final_text_parts.append(clean if clean else text)
+                yield StreamEvent(type="text_delta", data=clean if clean else text)
 
             elif event["type"] == "tool_use_start":
                 current_tool = PendingToolCall(
@@ -208,6 +216,25 @@ async def agent_loop(
                     tool_input=input_dict,
                     tool_output=result_text,
                 ))
+
+                # Anomaly detection: check for suspicious patterns
+                detector = get_anomaly_detector()
+                user_msg = ""
+                for msg in reversed(messages):
+                    if msg.get("role") == "user":
+                        user_msg = str(msg.get("content", ""))
+                        break
+                signals = detector.record_tool_call(
+                    tenant_id=config.tenant_id,
+                    tool_name=tc.name,
+                    user_message=user_msg,
+                )
+                for sig in signals:
+                    _asyncio.ensure_future(audit_turn(
+                        tenant_id=config.tenant_id,
+                        user_input=f"ANOMALY: {sig.rule}",
+                        agent_output=sig.details,
+                    ))
 
                 yield StreamEvent(
                     type="tool_result",

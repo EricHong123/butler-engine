@@ -1,0 +1,110 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/security.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  schedule:
+    - cron: '0 3 * * 1'  # Weekly on Monday 3am UTC
+
+jobs:
+  dependency-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install pip-audit safety
+          pip install -e .
+
+      - name: pip-audit scan
+        run: |
+          pip-audit --requirement <(pip freeze) --progress-spinner off
+
+      - name: Safety scan
+        run: |
+          safety check --full-report || true  # Non-blocking for MVP
+
+      - name: Generate requirements lock
+        run: |
+          pip freeze --all > requirements-lock.txt
+          echo "## Dependency Lock File" > requirements-lock-header.md
+          echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> requirements-lock-header.md
+          echo "Commit: ${{ github.sha }}" >> requirements-lock-header.md
+          cat requirements-lock-header.md requirements-lock.txt > requirements-lock-final.txt
+
+      - name: Upload lock file
+        uses: actions/upload-artifact@v4
+        with:
+          name: requirements-lock
+          path: backend/requirements-lock-final.txt
+
+  code-scan:
+    name: Code Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Bandit security scan
+        run: |
+          bandit -r src/butler/ -f json -o bandit-report.json || true
+          bandit -r src/butler/ -ll 2>&1 | tail -20
+
+      - name: Upload bandit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: backend/bandit-report.json
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run tests with coverage
+        run: |
+          python -m pytest src/butler/tests/ -v --cov=butler --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
